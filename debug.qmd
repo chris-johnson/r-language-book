@@ -1,0 +1,18 @@
+
+# Debugging
+
+https://rstudio-education.github.io/hopr/debug.html
+
+After `browser()` has been called, submitting 
+
+* `c` or `cont` to exit the browser and continue execution
+* `f` to finish execution of the current loop or function
+* `s` to evaluate the next statement
+* `where` to print a stack trace
+* `r` to resume
+* `Q` to quit
+
+`help` can be submitted to see the above commands
+
+If an object named `c`, `cont`, `f`, `s`, `where`, `r`, or `Q` exists, those must be wrapped with `get()`, e.g. `get("f")`.
+

@@ -1,0 +1,212 @@
+[
+  {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "The R language",
+    "section": "",
+    "text": "Preface\nThis is a Quarto book.\nTo learn more about Quarto books visit https://quarto.org/docs/books."
+  },
+  {
+    "objectID": "base.html#do.call",
+    "href": "base.html#do.call",
+    "title": "1  {base}",
+    "section": "1.1 do.call()",
+    "text": "1.1 do.call()\ndo.call(\n  what = function_name, \n  args = list(arg_1, arg_2, arg_3)\n)\nis equivalent to\nfunction_name(arg_1, arg_2, arg_3)\nAh! Leah! by Donnie Iris"
+  },
+  {
+    "objectID": "base.html#quoting-functions-base",
+    "href": "base.html#quoting-functions-base",
+    "title": "1  {base}",
+    "section": "1.2 Quoting functions ({base})",
+    "text": "1.2 Quoting functions ({base})\nUnlike {rlang} analogs, quoting functions from {base} do not support unquoting. (This was the motivation for quasiquotation.)\n\nquote()\nsubstitute()\nalist()\nbquote()\n~"
+  },
+  {
+    "objectID": "base.html#accessors",
+    "href": "base.html#accessors",
+    "title": "1  {base}",
+    "section": "1.3 Accessors",
+    "text": "1.3 Accessors\n:: is an accessor, and it used to access exported functions from a package.\n::: is used to access non-exported functions. Non-exported functions may not be documented."
+  },
+  {
+    "objectID": "datetimes.html#problem",
+    "href": "datetimes.html#problem",
+    "title": "2  Dates, times, and datetimes",
+    "section": "2.1 Problem",
+    "text": "2.1 Problem\nOccasionally, dates will be read in as a number representing some time since the origin.\nThe origin depends on how the data were recorded. Here are a few common origins:\n\n\n\nSource\nOrigin\n\n\n\n\nExcel\n1899-12-30\n\n\nUnix\n1970-01-01\n\n\n\nThe origin"
+  },
+  {
+    "objectID": "datetimes.html#solution",
+    "href": "datetimes.html#solution",
+    "title": "2  Dates, times, and datetimes",
+    "section": "2.2 Solution",
+    "text": "2.2 Solution\n\nDetermine the origin. E.g., in Excel, this is 1899-12-30.\nIf just interested in a date, then your variable needs to be numeric, and represent the number of days since the origin; if interested in a datetime, then your variable needs to be numeric, and represent the number of seconds since the origin.\n\n\n2.2.1 Example\nSuppose\n\nwe have an Excel workbook named metadata.xlsx with a column named timestamp, and the dates look like we expect (e.g., \"2018-03-15 10:15\")\nwe read in timestamp.xlsx in R using readxl::read_excel()\nwe’re suprised to find that the values under timestamp don’t look like dates (e.g., \"2018-03-15 10:15\" has become \"43173.666666666664\")\n\nWhat happened?\nTo simulate this scenario, here’s a data set containing\n\nwhat_we_got (the time since the origin)\nwhat_we_expected (the timestamp we’re used to [the target for this exercise])\n\n\nmetadata <-\n  read_excel(\n    path = \n      file.path(\n        \"path/to/\",\n        \"metadata.xlsx\"\n      ),\n    sheet = \"Timestamp\"\n  )\n\nWe want what_we_got (a number representing the time since the origin) to be what_we_expected (a timestamp that is formatted in a familiar way).\nWe don’t know what units what_we_got is in, but we can easily find that out by\n\ndetermining the origin\ndoing some simple math\n\nE.g., the first value is metadata$what_we_got[1]. The origin for these values is 1899-12-30 (%Y%m%d).\nIf we assume this value is the number of days since the origin, and we just want the date, all we need to do is ensure we convert what_we_got to numeric, and use lubridate::as_date() with origin = \"1899-12-30 UTC\":\n\nmetadata %>%\nmutate(\n  .data = .,\n  what_we_got = as.numeric(what_we_got),\n  what_we_got = as_date(what_we_got, origin = \"1899-12-30 UTC\")\n)\n\nTo recover \"2018-03-15 10:15\" (the datetime), we need to convert what_we_got to a more granular unit: seconds.\nTo do so, convert\n\ndays to hours (24 hours per day);\nhours to minutes (60 minutes per hour); and\nminutes to seconds (60 seconds per minute)\n\nand use lubridate::as_datetime():\n\nmetadata %>%\nmutate(\n  .data = .,\n  what_we_got = as.numeric(what_we_got) * 24 * 60 * 60,\n  what_we_got = as_datetime(what_we_got, origin = \"1899-12-30 UTC\")\n)\n\nThat’s it!"
+  },
+  {
+    "objectID": "debug.html",
+    "href": "debug.html",
+    "title": "3  Debugging",
+    "section": "",
+    "text": "https://rstudio-education.github.io/hopr/debug.html\nAfter browser() has been called, submitting\n\nc or cont to exit the browser and continue execution\nf to finish execution of the current loop or function\ns to evaluate the next statement\nwhere to print a stack trace\nr to resume\nQ to quit\n\nhelp can be submitted to see the above commands\nIf an object named c, cont, f, s, where, r, or Q exists, those must be wrapped with get(), e.g. get(\"f\")."
+  },
+  {
+    "objectID": "methods.html#generics",
+    "href": "methods.html#generics",
+    "title": "4  {methods}",
+    "section": "4.1 Generics",
+    "text": "4.1 Generics\nsetGeneric(name = “name”, def = function(standardGeneric))"
+  },
+  {
+    "objectID": "operators.html",
+    "href": "operators.html",
+    "title": "5  Operators",
+    "section": "",
+    "text": "Some operators have functional forms. E.g.\n\n<- is the same as assign()\n:: is the same as getExportedValue()\n\nOperators also have a prefix forms. E.g.\n\nx <- 3 is the same as `<-`(x, 3)\ndplyr::mutate is the same as `::`(dplyr, mutate)\nmtcars$mpg is the same as `$`(mtcars, mpg)\nmtcars[[\"mpg\"]] is the same as ```[[(mtcars, “mpg”)``\n\nNote: $ can take mpg, whereas [[ requires \"mpg\"."
+  },
+  {
+    "objectID": "r6.html#methods",
+    "href": "r6.html#methods",
+    "title": "6  R6",
+    "section": "6.1 Methods",
+    "text": "6.1 Methods\nUse ProperCase when naming the class generator.\n\nMyClass <- R6::R6Class(\n  classname = \"MyClass\",\n  public =\n    list(\n      dataset = NULL\n    )\n)\n\nClasses are built similar to how scripts are ran. We can take advantage of this.\nSuppose we setup the following directory structure:\nclasses/\n  oatsClass/\nSuppose we save the definition for oatsClass in oatsClass.R in classes/oatsClass/\nclasses/\n  oatsClass/\n    oatsClass.R\nCurrently, oatsClass has no methods.\nWe could define public methods, store them inside of a list, and pass those to the public argument of the call to R6::R6Class(). The skeleton would look like this…\n\nMyClass <- R6::R6Class(\n  classname = \"MyClass\",\n  public = list()\n)\n\n…and a concrete example would look like this:\n\nMyClass <- R6::R6Class(\n  classname = \"MyClass\",\n  public =\n    list(\n      dataset = NULL,\n      initialize = function(path_to_csv) {\n        self$dataset <- \n          read.csv(\n            file = path_to_csv,\n            stringsAsFactors = FALSE\n          )\n      }\n    )\n)\n\nWe could put more method definitions in the list. If the number of methods grows large, we might consider the ideas of superclassing and subclassing, however even if the number of methods is small but the method definitions are very large, we might want to organize methods into separate files.\nAbove, I stated\n\nClasses are built similar to how scripts are ran. We can take advantage of this.\n\nOur directory structure looks like this\nclasses/\n  oatsClass/\n    oatsClass.R\nWe may wish to add an initialization method in initialize.R and save it in classes/oatsClass/ alongside oatsClass.R:\nclasses/\n  oatsClass/\n    oatsClass.R\nRecall the initialization method was defined as\n\ninitialize = function(path_to_csv) {\n  self$dataset <- \n    read.csv(\n      file = path_to_csv,\n      stringsAsFactors = FALSE\n    )\n}\n\nSuppose initialize.R contains the same definition:\n\ninitialize <- function(path_to_csv) {\n  self$dataset <- \n    read.csv(\n      file = path_to_csv,\n      stringsAsFactors = FALSE\n    )\n}\n\nNote: Inside a list, we used = for assignment. If defining the method externally (i.e. outside of the class defintion), we can (and should) use <-.\nWe save initialize.R in classes/oatsClass/:\nclasses/\n  oatsClass/\n    oatsClass.R\n    initialize.R\nRecall our initial development of oatsClass.R:\n\nMyClass <- R6::R6Class(\n  classname = \"MyClass\",\n  public =\n    list(\n      dataset = NULL\n    )\n)\n\nRecall that classes are constructed in a similar way to how scripts are ran. If we ran this class definition, we would find that our class generator already has some methods that were created when we created the generator. One of those methods is set().\noatsClass$set() has four formal arguments:\n\nwhich\nname\nvalue\noverwrite (has default argument FALSE)\n\n$set() allows us to assign members to our class generator.\n\nWe can take advantage of this.\n\nOne of those members is public which is a list of public methods.\nOur class generator definition now looks like\n\nMyClass <- R6::R6Class(\n  classname = \"MyClass\",\n  public =\n    list(\n      dataset = NULL\n    )\n)\n\nMyClass$set(\n  which = \"public\",\n  name = \"initialize\",\n  value = source(file = \"initialize.R\")$value,\n  overwrite = FALSE\n)\n\nwhich is much cleaner, especially so as the number of methods—and the lengths of methods (in lines)— grows.\nNote: source(), if assigned, returns a list with value and visible, therefore set value = source()$value."
+  },
+  {
+    "objectID": "r6.html#debug",
+    "href": "r6.html#debug",
+    "title": "6  R6",
+    "section": "6.2 Debug",
+    "text": "6.2 Debug\n\n6.2.1 cannot add bindings to a locked environment\nMember has not been added to public or private. E.g.\n\nMyClass <- R6::R6Class(\n  classname = \"MyClass\",\n  public =\n    list(\n      read_csv = function(path_to_csv) { \n        self$dataset <- \n          read.csv(\n            file = path_to_csv,\n            stringsAsFactors = FALSE\n          )\n      }\n    )\n)\n\nIn the above class definition, self$dataset isn’t a member. To fix\n\nMyClass <- R6::R6Class(\n  classname = \"MyClass\",\n  public =\n    list(\n      dataset = NULL,\n      read_csv = function(path_to_csv) { \n        self$dataset <- \n          read.csv(\n            file = path_to_csv,\n            stringsAsFactors = FALSE\n          )\n      }\n    )\n)"
+  },
+  {
+    "objectID": "r6.html#terminology",
+    "href": "r6.html#terminology",
+    "title": "6  R6",
+    "section": "6.3 Terminology",
+    "text": "6.3 Terminology\n\nmembers\n\nmethods, fields\n\nmethods\n\nfunctions that are assigned to objects after instantiated by a class generator\n\nfields\n\ndata or data storage assigned to objects after instantiated by a class generator"
+  },
+  {
+    "objectID": "r6.html#notes",
+    "href": "r6.html#notes",
+    "title": "6  R6",
+    "section": "6.4 Notes",
+    "text": "6.4 Notes\nclass methods vs member functions class methods have access to self; member functions do not.\nself$ private$ super$\nR6 does not indicate if a method is syntactically incorrect when using $set(). In fact, it compiles the generator without those class methods."
+  },
+  {
+    "objectID": "regex.html#terminology",
+    "href": "regex.html#terminology",
+    "title": "7  Regular expressions (regex)",
+    "section": "7.1 Terminology",
+    "text": "7.1 Terminology\nword boundary :\nnon-word boundary :\nCapture groups () are for matching ^: string beginning $: string end"
+  },
+  {
+    "objectID": "regex.html#lookarounds",
+    "href": "regex.html#lookarounds",
+    "title": "7  Regular expressions (regex)",
+    "section": "7.2 Lookarounds",
+    "text": "7.2 Lookarounds\n<: lookbehind !: negative\npositive :\nnegative :\nlookahead :\nlookbehind :\nLet\nx be a regex of stuff you want y be a regex of stuff you don’t want\nx(?=y). This is called lookahead (?<=y)x This is called lookbehind\n(?!query) (?<!query)"
+  },
+  {
+    "objectID": "rlang.html#defusion",
+    "href": "rlang.html#defusion",
+    "title": "8  {rlang} quoting functions",
+    "section": "8.1 Defusion",
+    "text": "8.1 Defusion\n\n8.1.1 Defusing operators (i.e. defusors)\nDefusing is a synonym for quoting.  Defusing prevents evaluation of R code. Think of defused expressions as blueprints.  The inverse of defusion is resumption, i.e. the inverse of defuse is resume.\nexpr() and enquo() are defusing operators, which ensure their arguments (R code) are not evaluated. The former is for the developer, and the latter is for the user.\nname objects (i.e. symbols) which point to an object in an environment are environment variables. name objects that refer to a column in a data.frame are data variables.\nexpr() can create call objects (e.g. expr(foo)) or name objects (e.g. expr(mean(foo, na.rm = TRUE))).\n\n\n8.1.2 Defused expressions\nDefused expressions are\n\ncalls (call objects), e.g. mean(c(99, 82, 16)), +`(2, 3) (same as 2 + 3)\nsymbols (name objects, i.e. object names)"
+  },
+  {
+    "objectID": "rlang.html#forcing-operators-i.e.-forcers",
+    "href": "rlang.html#forcing-operators-i.e.-forcers",
+    "title": "8  {rlang} quoting functions",
+    "section": "8.2 Forcing operators (i.e. forcers)",
+    "text": "8.2 Forcing operators (i.e. forcers)\n!! and !!! are forcing operators, which force evaluation inside of a defused expression. Note: It is sometimes necessary to wrap forcing operators in parentheses, e.g. (!!this) and (!!!that)."
+  },
+  {
+    "objectID": "rlang.html#unquoting",
+    "href": "rlang.html#unquoting",
+    "title": "8  {rlang} quoting functions",
+    "section": "8.3 Unquoting",
+    "text": "8.3 Unquoting\n!! unquotes a single argument, which can be a\n\ncall object, e.g. x <- expr(-1) \nname object (i.e. a symbol), e.g. a <- sym(\"y\") \nnumeric object (i.e. a constant), e.g. b <- 1\n\n!! can be unquote arguments in a function call, or can be used within a function definition:\n\nmy_sample <- rnorm(n = 30)\nmy_expr <- expr(mean(x = !!my_sample))\neval(expr = my_expr)\n\n\n!! can also unquote a function. E.g., let’s build var(x, y):\n\nf <- expr(var) # quote (`f` is a `name` object)\nexpr(!!f) # unquote\nexpr((!!f)(x, y)) # unquote, requote\n\nNote: expr(!!f(x, y)) unquotes the result of f(x, y). We only want to unquote f, which is of class name.\nExample of unquoting a call:\n\nf <- expr(base::list.files) # `f` is an `call` object.\npath <- \"path/to/files\"\npattern <- \"\\\\.csv\"\n\nexpr((!!f)(path = path, pattern = pattern))\n\nexpr((!!f)(path = !!path, pattern = !!pattern))\n\nAlso,\n\ncall2(.fn = f, expr(path), expr(pattern))\ncall2(.fn = f, expr(!!path), expr(!!pattern))\n\n= is not allowed in expr(). E.g., expr(path = !!path) is not valid, so\n\ncall2(.fn = f, expr(path = !!path), expr(pattern = !!pattern))\n\nis also not valid. To explicitly set arguments, use `=`():\n\ncall2(.fn = f, expr(`=`(path, !!path)), expr(`=`(pattern, !!pattern)))"
+  },
+  {
+    "objectID": "rlang.html#advanced-from-rlang-documentation",
+    "href": "rlang.html#advanced-from-rlang-documentation",
+    "title": "8  {rlang} quoting functions",
+    "section": "8.4 Advanced (from {rlang} documentation)",
+    "text": "8.4 Advanced (from {rlang} documentation)\nqq_show() can be used to experiment with"
+  },
+  {
+    "objectID": "rlang.html#analogs",
+    "href": "rlang.html#analogs",
+    "title": "8  {rlang} quoting functions",
+    "section": "8.5 Analogs",
+    "text": "8.5 Analogs\n\n\n\n{base}\n{rlang}\nthis\n\n\n\n\nquote()\nexpr()\nequivalent\n\n\nsubstitute()\nenexpr()\napproximate\n\n\nalist()\nexprs()\nequivalent\n\n\nas.list(substitute(...()))\nenexprs()\nequivalent\n\n\n\n\n\n\n\n\narguments\ndeveloper\nuser\n\n\n\n\none\nquote()\nsubstitute()\n\n\nmany\nalist()\nas.list(substitute(...()))"
+  },
+  {
+    "objectID": "rlang.html#quasiquototing-functions-rlang",
+    "href": "rlang.html#quasiquototing-functions-rlang",
+    "title": "8  {rlang} quoting functions",
+    "section": "8.6 Quasiquototing functions ({rlang})",
+    "text": "8.6 Quasiquototing functions ({rlang})\n\n8.6.1 \n!! is unquote (and for fun can be read as bang-bang)\nIf a function\n\nevaluates its arguments, we must do the quoting\nquotes its arguments, we must do the unquoting (with !!)\n\nQuoted arguments must be captured by the function and processed. \n\n\nNonstandard evaluation\n\n\n8.6.2 Quasiquotation\nQuasiquotation is\n\nquotation \nunquoting\nnon-quoting\n...\n\n\n\n8.6.3 Quoting functions\n\nexpr()\n\nignores whitespace \nis not useful inside of a function\n\nuse enexpr(), which is an enriched expr()\nuse enexprs() for capturing ...\n\n\nexprs(x = x^2, y = y^3, z = z^4) is equivalent to\n\nlist(\n  expr(x^2),\n  expr(y^3),\n  expr(z^4)\n)\n\nUse\n\nenexpr() and enexprs() to capture user input\nexpr() and exprs() to capture own input\n\nUse\nensym() and ensyms() \n\n\n\n8.6.3.1 Table\n\n\n\nfunction\ncontext\n\n\n\n\nexprs()\ninteractive\n\n\n\n\n\n\n8.6.4 \n\ninteractive context\n\nuser-supplied, variable\n\nnon-interactive context\n\ndeveloper-supplied, fixed\n\nquotation\n\ncapturing an expression without evaluating it"
+  },
+  {
+    "objectID": "rlang.html#symbols-vs.-expressions",
+    "href": "rlang.html#symbols-vs.-expressions",
+    "title": "8  {rlang} quoting functions",
+    "section": "8.7 Symbols vs. expressions",
+    "text": "8.7 Symbols vs. expressions\nsymbol :\nexpression :"
+  },
+  {
+    "objectID": "tidyeval.html#terminology",
+    "href": "tidyeval.html#terminology",
+    "title": "9  {tidyeval}",
+    "section": "9.1 Terminology",
+    "text": "9.1 Terminology\n\npronoun\n\n.data\n\nquasiquotation\n\n\n\nquosures\n\ndata structure storing both expression and environment\n\ntidyeval\n\nunderlying toolkit\n\nquosure\n\nA special type of formula: A one-sided formula.\n\n!!\n\n\n\nquo()\n\nEquivalent to quote()?\n\nenquo()\n\nEquivalent to substitute()?\n\npromise\n\n\n\n\nquo_name() :\n\nEnclosure\n\nWhen an object keeps track of its environment. (Try typeof(mean))\n\n\nSee rlang::.data.\nHow to evaluate input, rather than quote it? Using a function that captures the expression and environment.\nquote() and ~ don’t work very well, so quo() was created.\nquo() works like \": it quotes its input rather than evaluating it.\nUse !! to\nenquo()\nThe definition of quo():\nquo <- function(expr) {\n  enquo(expr)\n}\n\niris\n\ncolumn <- \"Species\"\n\nmy_quosure <- quo(column)\n\nblah <- select(.data = iris, !!my_quosure)\n\nblah\n\nDoes it just boil down to using enquo() when using dplyr functions inside of my own functions?\nWant to return() custom strings? Use quo_name(). Also, use :=.\nMultiple arguments?\n... as a formal argument quos() to capture arguments !!! to splice\n\nx <- c(1:10)\n\nargs <- list(na.rm = TRUE, trim = 0.25)\n\nquo(mean(x, !!!args))\n\n# or\n\nargs <- list(quo(x), na.rm = TRUE, trim = 0.25)\n\nquo(mean(!!!args))\n\nQuoting is capturing. In R, quoting is done via\n~ quote()\n\nclass(~junk)\nclass(quote(junk))\n\nformulas capture their code and its execution environment.\nget_expr() get_env() eval_tidy()"
+  },
+  {
+    "objectID": "tidyeval.html#quasiquotation",
+    "href": "tidyeval.html#quasiquotation",
+    "title": "9  {tidyeval}",
+    "section": "9.2 Quasiquotation",
+    "text": "9.2 Quasiquotation\nQuasiquotation LISP\nUnquoting:\n\nbasic\nunquote splicing\nunquoting names\n\nCapture letters as an expression:\n\nquo(toupper(letters))\n\nCapture what letters would typically return:\n\nquo(toupper(!!letters))\n\n\nthing <- quo(letters)\n\nquo(toupper(!!thing))\n\nThe ^ signifies what?\n\nquo(list(!!!letters))\n\nIf you want to unquote on the left-hand side, i.e. set variable names, use :=.\n\n# From \"Tidy evaluation in 5 mins\"\n\nmy_scatterplot <- function(df, xvar, yvar) {\n  \n  xvar <- enexpr(xvar)\n  yvar <- enexpr(yvar)\n  \n  ggplot(df, aes(!!xvar, !!yvar)) +\n    geom_point()\n  \n}\n\nsource(\"path/to/my_scatterplot.R\")\n\n\nmy_scatterplot <- function(df, xvar, yvar) {\n  \n  browser()\n  \n  # > xvar\n  # Error: object 'cyl' not found\n  # > yvar\n  # Error: object 'qsec' not found\n  \n  # Promise evaluation?\n  \n  xvar <- enexpr(xvar)\n  yvar <- enexpr(yvar)\n  \n  # > xvar\n  # cyl\n  # > yvar\n  # qsec\n  \n  browser()\n  \n  ggplot(df, aes(!!xvar, !!yvar)) +\n    geom_point()\n  \n}\n\nmy_scatterplot(\n  df = mtcars, \n  xvar = cyl, \n  yvar = qsec\n)"
+  },
+  {
+    "objectID": "under_the_hood.html",
+    "href": "under_the_hood.html",
+    "title": "10  Under the hood",
+    "section": "",
+    "text": "11 Configuration"
+  },
+  {
+    "objectID": "under_the_hood.html#libraries",
+    "href": "under_the_hood.html#libraries",
+    "title": "10  Under the hood",
+    "section": "10.1 Libraries",
+    "text": "10.1 Libraries\nIn R, a library is a directory whose subdirectories are named after and include the contents of R packages.\nThe types of libraries are\n\nCommon (library is created during install; houses “standard” and “recommended” packages that are installed along with R [see installed.packages(priority = \"high\")])\nUser (librar is created during install; houses additional packages installed by the user)\nSite (not created by default)\n\n\n\nSite\n\n\n\n\nSys.getenv() will display all environment variables. It seems to be a superset of what is returned by set in Command Prompt, including R-specific variables.\nSys.getenv(\"R_HOME\") Sys.getenv(\"R_LIBS_USER\") Sys.getenv(\"R_LIBS_SITE\") \nAdditional libraries can be added using .libPaths(). The order of .libPaths() indicates\nIt is suggested to use a combination of common library and user libraries.\nUser-specific libraries: Set r-libs-user in /etc/rstudio/rsession.conf\nUser libraries are associated with major.minor, not major.minor.patch"
+  },
+  {
+    "objectID": "under_the_hood.html#references",
+    "href": "under_the_hood.html#references",
+    "title": "10  Under the hood",
+    "section": "10.2 References",
+    "text": "10.2 References\nhttps://cran.r-project.org/doc/manuals/r-release/R-admin.html#Managing-libraries https://support.rstudio.com/hc/en-us/articles/215733837-Managing-libraries-for-RStudio-Server"
+  },
+  {
+    "objectID": "under_the_hood.html#dotfiles",
+    "href": "under_the_hood.html#dotfiles",
+    "title": "10  Under the hood",
+    "section": "11.1 Dotfiles",
+    "text": "11.1 Dotfiles\nDotfiles are for customization.\nMust end with newline or last line will not be ran.\n.Renviron is for\n\nsensitive information (e.g. API keys)\nR-specific environment variables\n\nbut doesn’t contain R code.\n.Rprofile\n\nis for and contains R code\nlives in R_PROFILE_USER (/ by default)"
+  },
+  {
+    "objectID": "under_the_hood.html#libraries-1",
+    "href": "under_the_hood.html#libraries-1",
+    "title": "10  Under the hood",
+    "section": "11.2 Libraries",
+    "text": "11.2 Libraries\n\n11.2.1 Installing packages\nAll installation methods use R CMD install, which can do so from source, bundle, or binary packages.\nWays to install packages:\n\ninstall.packages()\ndevtools::install()\ndevtools::build()\ndevtools::install_github()\n\n\n\n11.2.2 Libraries\nA library is a directory containing installed packages.\n.libPaths() shows active libraries. (“Active” meaning that R knows where to find them.)\n\n\n\n\n11.2.3 Where packages are installed\n\n\n11.2.4 How to install R packages\n\n\n11.2.5 Via install.packages()\n\n11.2.5.1 Installing from a zip\n\n\n\n\n11.2.6 Via devtools::install.github()"
+  },
+  {
+    "objectID": "under_the_hood.html#problems-with-installing-r-packages",
+    "href": "under_the_hood.html#problems-with-installing-r-packages",
+    "title": "10  Under the hood",
+    "section": "11.3 Problems with installing R packages",
+    "text": "11.3 Problems with installing R packages\n\n11.3.1 Unable to move temporary installation\nWhen attempting to install a package via install.packages(), you may get the warning unable to move temporary installation 'C:\\path\\to\\temporary\\installation' to 'C:\\path\\to\\permanent\\installation'. This problem is due to antivirus and everything moving too fast.\nAn actual instance looks like this:\npackage 'rgdal' successfully unpacked and MD5 sums checked.\n\nWarning in install.packages :\n  unable to move temporary installation\n  'path\\to\\R\\win-library\\3.4\\file26a846732c06\\rgdal'\n  to\n  'path\\to\\R\\win-library\\3.4\\rgdal'\n  \nThe downloaded binary packages are in\n  path\\to\\AppData\\Local\\Temp\\1\\RtmpmklLST\\downloaded_packages\n\n\n11.3.1.1 Solution 1 (preferred)\nThis solution worked for me:\n\nSubmit debug(utils:::unpackPkgZip)\nSubmit install.packages(\"rgdal\", dependencies = TRUE)\nStep through until complete.\n\n\n\n11.3.1.2 Solution 2 (not attempted, but would attempt)\nR also prints the location of the\nI didn’t try this solution, but I would feel comforable doing so. Locate the binary package location (C:/path/to/downloaded_packages) as reported by R.\n\nzipfile <- \n  list.files(\n    path = \"C:/path/to/downloaded_packages\", \n    full.names = TRUE\n  )\n\nexdir <- libPaths()[1]\n\nfor(i in 1:length(path_to_binary)) {\n  \n  unzip(\n    zipfile = zipfile[i], \n    exdir = exdir\n  )\n  \n}\n\n\n\n11.3.1.3 Solution 3 (not attempted, but would attempt)\nThis solution also involves using the zip located in C:/path/to/downloaded_packages:\n\npkgs <- \"C:/path/to/downloaded_packages/package.zip\"\n\nlib <- libPaths()[1]\n\ninstall.packages(\n  pkgs = pkgs,\n  repos = NULL,\n  type = \"win.binary\",\n  lib = lib\n)\n\n\n\n11.3.1.4 Solution 4 (not preferred)\nI initially attempted this solution, but a Sys.sleep time of 2.5 didn’t work for me:\n\nSubmit trace(utils:::unpackPkgZip, edit = TRUE)\nChange Sys.sleep(0.5) to Sys.sleep(2.5)\n\nIn addition, this is not a comfortable solution, in my opinion. (utils:::unpackPkgZip() does get reset after quitting or terminating the R session.)\n\n\n11.3.1.5 Solution 5 (nope)\nThe worst solution seems to be changing the read and write access to folders, and this is not recommended as they are probably set as such for a good reason!"
+  }
+]

@@ -1,0 +1,25 @@
+
+# Operators
+
+Some operators have functional forms. E.g.
+
+* `<-` is the same as `assign()`
+* `::` is the same as `getExportedValue()`
+
+Operators also have a _prefix forms_. E.g.
+
+* `x <- 3` is the same as ```<-`(x, 3)``
+* `dplyr::mutate` is the same as ```::`(dplyr, mutate)``
+* `mtcars$mpg` is the same as ```$`(mtcars, mpg)``
+* `mtcars[["mpg"]] is the same as ```[[`(mtcars, "mpg")``
+
+Note: ```$``` can take `mpg`, whereas ```[[``` requires `"mpg"`.
+
+<!-- Extra credit
+
+Why do both of the following work?
+
+    `$`(mtcars, mpg)
+    `$`(mtcars, "mpg")
+
+-->

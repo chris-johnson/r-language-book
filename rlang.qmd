@@ -1,0 +1,236 @@
+
+# `{rlang}` quoting functions
+
+arguments | developer   | user
+----------|-------------|------------
+one       | `expr()`    | `enexpr()`
+many      | `exprs()`   | `enexprs()`
+
+`{rlang}` quoting functions
+
+* have a more consistent naming scheme than `{base}` quoting functions
+* allow for unquoting (thus are also quasiquoting functions), whereas `{base}` quoting functions don't
+    * `bquote()` is an exception?
+* 
+
+Inverses of quoting are
+
+* unquoting (inside `expr()`, e.g. `expr(!!x)` is equivalent to `x`)
+* evaluation (outside `expr()`, e.g. `eval(expr(x))` is equivalent to `x`)
+
+## Defusion
+
+### Defusing operators (i.e. _defusors_)
+
+_Defusing_ is a synonym for _quoting_. <!-- specific to `{rlang}`? --> Defusing prevents evaluation of R code. Think of defused expressions as blueprints. <!-- see `?ensym` --> The inverse of defusion is _resumption_, i.e. the inverse of defuse is _resume_.
+
+`expr()` and `enquo()` are _defusing operators_, which ensure their arguments (R code) are not evaluated. The former is for the developer, and the latter is for the user.
+
+`name` objects (i.e. symbols) which point to an object in an environment are _environment variables_. `name` objects that refer to a column in a `data.frame` are _data variables_.
+
+`expr()` can create `call` objects (e.g. `expr(foo)`) or `name` objects (e.g. `expr(mean(foo, na.rm = TRUE))`).
+
+### Defused expressions
+
+Defused expressions are
+
+* calls (`call` objects), e.g. `mean(c(99, 82, 16))`, ``+`(2, 3)`` (same as `2 + 3`)
+* symbols (`name` objects, i.e. object names)
+
+## Forcing operators (i.e. _forcers_)
+
+`!!` and `!!!` are _forcing operators_, which force evaluation inside of a defused expression. Note: It is sometimes necessary to wrap forcing operators in parentheses, e.g. `(!!this)` and `(!!!that)`.
+
+## Unquoting
+
+`!!` unquotes a single argument, which can be a
+
+* `call` object, e.g. `x <- expr(-1)` <!-- `class(x)` returns `"call"` -->
+* `name` object (i.e. a symbol), e.g. `a <- sym("y")` <!-- `class(a)` returns `"name"` -->
+* `numeric` object (i.e. a constant), e.g. `b <- 1`
+
+`!!` can be unquote arguments in a function call, or can be used within a function definition:
+
+```{r}
+
+my_sample <- rnorm(n = 30)
+my_expr <- expr(mean(x = !!my_sample))
+eval(expr = my_expr)
+
+```
+
+<!--
+
+Why not
+
+    my_sample <- rnorm(n = 30)
+    mean(x = my_sample)
+
+When would this be useful?
+
+-->
+
+`!!` can also unquote a function. E.g., let's build `var(x, y)`:
+
+```{r}
+
+f <- expr(var) # quote (`f` is a `name` object)
+expr(!!f) # unquote
+expr((!!f)(x, y)) # unquote, requote
+
+```
+
+Note: `expr(!!f(x, y))` unquotes the result of `f(x, y)`. We only want to unquote `f`, which is of class `name`.
+
+Example of unquoting a call:
+
+```{r}
+
+f <- expr(base::list.files) # `f` is an `call` object.
+path <- "path/to/files"
+pattern <- "\\.csv"
+
+expr((!!f)(path = path, pattern = pattern))
+
+expr((!!f)(path = !!path, pattern = !!pattern))
+    
+```
+
+Also,
+```{r}
+
+call2(.fn = f, expr(path), expr(pattern))
+call2(.fn = f, expr(!!path), expr(!!pattern))
+
+```
+
+`=` is not allowed in `expr()`. E.g., `expr(path = !!path)` is *not* valid, so
+
+```{r}
+call2(.fn = f, expr(path = !!path), expr(pattern = !!pattern))
+```    
+
+is also not valid. To explicitly set arguments, use ```=`()``:
+
+```{r}
+call2(.fn = f, expr(`=`(path, !!path)), expr(`=`(pattern, !!pattern)))
+```
+<!-- See 19.4.4 "Unquoting in special forms" of Advanced R -->
+
+## Advanced (from `{rlang}` documentation)
+
+`qq_show()` can be used to experiment with <!-- via ?`!!` -->
+
+## Analogs
+
+`{base}`                     | `{rlang}`   | this        |
+-----------------------------|-------------|-------------|
+`quote()`                    | `expr()`    | equivalent  |
+`substitute()`               | `enexpr()`  | approximate |
+`alist()`                    | `exprs()`   | equivalent  |
+`as.list(substitute(...()))` | `enexprs()` | equivalent  |
+
+<!-- Source: Table 19.1, https://adv-r.hadley.nz/quasiquotation.html -->
+
+arguments | developer     | user
+----------|---------------|-----------------------------
+one       | `quote()`     | `substitute()`
+many      | `alist() `    | `as.list(substitute(...()))`
+
+## Quasiquototing functions (`{rlang}`)
+
+###
+
+`!!` is unquote (and for fun can be read as bang-bang)
+
+If a function 
+
+* evaluates its arguments, we must do the quoting
+* quotes its arguments, we must do the unquoting (with `!!`)
+
+Quoted arguments must be captured by the function and processed. <!-- What are R's normal evaluation rules? -->
+
+<!-- Hadley uses "quoted function" to refer to a function that quotes at least one of its inputs -->
+
+<!-- Example
+
+name <- "Hadley"
+time <- "morning"
+
+paste("Good", name, time)
+
+cement(Good, !!name, !!time)
+
+-->
+
+Nonstandard evaluation
+
+### Quasiquotation
+
+Quasiquotation is
+
+1. quotation <!-- Both {rlang} and {base} provide quoting functions -->
+2. unquoting
+3. non-quoting
+4. `...`
+
+### Quoting functions
+
+<!-- standard versions vs. enriched versions -->
+
+`expr()` 
+
+* ignores whitespace <!-- but `expr(a + b)` returns `a + b`, and `expr(a / b)` returns `a/b`? -->
+* is not useful inside of a function 
+    * use `enexpr()`, which is an _enriched_ `expr()`
+    * use `enexprs()` for capturing `...`
+
+`exprs(x = x^2, y = y^3, z = z^4)` is equivalent to
+
+```{r}
+
+list(
+  expr(x^2),
+  expr(y^3),
+  expr(z^4)
+)
+
+```
+
+Use 
+
+* `enexpr()` and `enexprs()` to capture user input
+* `expr()` and `exprs()` to capture own input
+
+Use
+
+`ensym()` and `ensyms()` <!-- analagous to `enexpr()` and `enexprs()` -->
+
+<!--  -->
+
+<!-- promise object? -->
+
+#### Table
+
+function  | context
+----------|------------
+`exprs()` | interactive
+
+###
+
+interactive context
+  : user-supplied, variable
+  
+non-interactive context
+  : developer-supplied, fixed
+
+quotation
+  : capturing an expression without evaluating it
+
+## Symbols vs. expressions
+
+symbol
+  :
+
+expression
+  :

@@ -1,0 +1,250 @@
+
+# R6
+
+## Methods
+
+Use ProperCase when naming the class generator. 
+
+```{r}
+
+MyClass <- R6::R6Class(
+  classname = "MyClass",
+  public =
+    list(
+      dataset = NULL
+    )
+)
+```
+
+Classes are built similar to how scripts are ran. We can take advantage of this.
+
+Suppose we setup the following directory structure:
+
+```
+classes/
+  oatsClass/
+```
+
+Suppose we save the definition for `oatsClass` in `oatsClass.R` in `classes/oatsClass/`
+
+```
+classes/
+  oatsClass/
+    oatsClass.R
+```
+
+Currently, `oatsClass` has no methods.
+
+We could define public methods, store them inside of a list, and pass those to the `public` argument of the call to `R6::R6Class()`. The skeleton would look like this...
+
+```{r}
+
+MyClass <- R6::R6Class(
+  classname = "MyClass",
+  public = list()
+)
+
+```
+
+...and a concrete example would look like this:
+
+```{r}
+
+MyClass <- R6::R6Class(
+  classname = "MyClass",
+  public =
+    list(
+      dataset = NULL,
+      initialize = function(path_to_csv) {
+        self$dataset <- 
+          read.csv(
+            file = path_to_csv,
+            stringsAsFactors = FALSE
+          )
+      }
+    )
+)
+
+```
+
+We could put more method definitions in the list. If the number of methods grows large, we might consider the ideas of superclassing and subclassing, however even if the number of methods is small but the method definitions are very large, we might want to organize methods into separate files.
+
+Above, I stated
+
+> Classes are built similar to how scripts are ran. We can take advantage of this.
+
+Our directory structure looks like this 
+
+```
+classes/
+  oatsClass/
+    oatsClass.R
+```
+
+We may wish to add an initialization method in `initialize.R` and save it in `classes/oatsClass/` alongside `oatsClass.R`:
+
+```
+classes/
+  oatsClass/
+    oatsClass.R
+```
+
+Recall the initialization method was defined as
+
+```{r}
+
+initialize = function(path_to_csv) {
+  self$dataset <- 
+    read.csv(
+      file = path_to_csv,
+      stringsAsFactors = FALSE
+    )
+}
+
+```
+
+Suppose `initialize.R` contains the same definition:
+
+```{r}
+
+initialize <- function(path_to_csv) {
+  self$dataset <- 
+    read.csv(
+      file = path_to_csv,
+      stringsAsFactors = FALSE
+    )
+}
+
+```
+
+Note: Inside a list, we used `=` for assignment. If defining the method externally (i.e. outside of the class defintion), we can (and should) use `<-`.
+
+We save `initialize.R` in `classes/oatsClass/`:
+
+```
+classes/
+  oatsClass/
+    oatsClass.R
+    initialize.R
+```
+
+Recall our initial development of `oatsClass.R`:
+
+```{r}
+
+MyClass <- R6::R6Class(
+  classname = "MyClass",
+  public =
+    list(
+      dataset = NULL
+    )
+)
+
+```
+
+Recall that classes are constructed in a similar way to how scripts are ran. If we ran this class definition, we would find that our class generator already has some methods that were created when we created the generator. One of those methods is `set()`.
+
+`oatsClass$set()` has four formal arguments:
+
+* `which`
+* `name`
+* `value`
+* `overwrite` (has default argument `FALSE`)
+
+`$set()` allows us to assign members to our class generator.
+
+> We can take advantage of this.
+
+One of those members is `public` which is a `list` of public methods.
+
+Our class generator definition now looks like
+
+```{r}
+
+MyClass <- R6::R6Class(
+  classname = "MyClass",
+  public =
+    list(
+      dataset = NULL
+    )
+)
+
+MyClass$set(
+  which = "public",
+  name = "initialize",
+  value = source(file = "initialize.R")$value,
+  overwrite = FALSE
+)
+
+```
+
+which is much cleaner, especially so as the number of methods&mdash;and the lengths of methods (in lines)&mdash; grows.
+
+Note: `source()`, if assigned, returns a list with `value` and `visible`, therefore set `value = source()$value`.
+
+## Debug
+
+### `cannot add bindings to a locked environment`
+
+Member has not been added to `public` or `private`. E.g.
+
+```{r}
+
+MyClass <- R6::R6Class(
+  classname = "MyClass",
+  public =
+    list(
+      read_csv = function(path_to_csv) { 
+        self$dataset <- 
+          read.csv(
+            file = path_to_csv,
+            stringsAsFactors = FALSE
+          )
+      }
+    )
+)
+
+```
+
+In the above class definition, `self$dataset` isn't a member. To fix
+
+```{r}
+
+MyClass <- R6::R6Class(
+  classname = "MyClass",
+  public =
+    list(
+      dataset = NULL,
+      read_csv = function(path_to_csv) { 
+        self$dataset <- 
+          read.csv(
+            file = path_to_csv,
+            stringsAsFactors = FALSE
+          )
+      }
+    )
+)
+
+```
+
+## Terminology
+
+members
+  : methods, fields
+
+methods
+  : functions that are assigned to objects after instantiated by a class generator
+
+fields
+  : data or data storage assigned to objects after instantiated by a class generator
+
+## Notes
+
+class methods vs member functions
+class methods have access to self; member functions do not.
+
+self$
+private$
+super$
+
+R6 does not indicate if a method is syntactically incorrect when using $set(). In fact, it compiles the generator without those class methods.

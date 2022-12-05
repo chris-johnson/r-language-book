@@ -1,0 +1,121 @@
+
+# Regular expressions (regex)
+
+Brackets
+
+logic, metacharacters without quantifiers, metacharacters with quantifiers
+keywords for common:
+-: range
+
+this   | that
+-------|-----------------------------------------------------
+:digit | digits
+:lower | lowercase
+:upper | uppercase
+:alpha | alphabetic
+:alnum | alphanumerics
+:punct | punctuation
+:blank | space or tab
+:space | space, tab, newline, vertical tab, form feed, return
+
+Logic
+
+^: negate brackets
+uppercase metacharacters negate lowercase versions (`\D` not a digit)
+
+Metacharacters are predefined `[]`s
+
+metacharacter | characters
+--------------|-----------
+`\w`          | A-z, 0-9
+`\s`          | space
+`\h`          | horizontal space <!-- ? -->
+`\v`          | vertical space <!-- ? -->
+`\n`          | newline
+`\r`          | carriage return
+`\t`          | tab
+`\b`          | word boundary
+
+
+Quantifiers always follow `[]`s or metacharacters
+
+quantifier | searches for
+-----------|-------------
+`*`        | 0 or more
+`+`        | 1 or more
+`{x}`      | exactly
+`{m, }`    | at least
+`{, n}`    | at most
+`{m, n}`   | minimum, maximum
+`?`        | optional
+
+Equivalencies
+
+`\d`, `:digit:`
+
+`+`, `*`, `?` are greedy by default
+make lazy using a trailing `?` (e.g. `+?`)
+
+
+Full list of metacharacters:
+
+* `(`
+* `)`
+* `[`
+* `]`
+* `{`
+* `}`
+* `^`
+* `$`
+* `.`
+* `\`
+* `?`
+* `*`
+* `+`
+* `|`
+
+`stringr`
+
+locate: start and end
+extract:
+match:
+
+## Terminology
+
+word boundary
+  :
+  
+non-word boundary
+  :
+  
+Capture groups () are for matching
+^: string beginning
+$: string end
+
+## Lookarounds
+
+<: lookbehind
+!: negative
+
+positive
+  :
+
+negative
+  :
+  
+lookahead
+  :
+
+lookbehind
+  :
+  
+Let 
+
+`x` be a regex of stuff you want
+`y` be a regex of stuff you don't want
+
+`x(?=y).` This is called *lookahead*
+`(?<=y)x` This is called *lookbehind*
+
+`(?!query) `
+`(?<!query)`

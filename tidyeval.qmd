@@ -1,0 +1,221 @@
+
+# `{tidyeval}`
+
+```{r setup, include = FALSE}
+
+knitr::opts_chunk$set(echo = TRUE)
+
+library(dplyr)
+library(rlang)
+
+```
+
+## Terminology
+
+pronoun
+  : `.data`
+
+quasiquotation
+  : 
+
+quosures
+  : data structure storing both expression and environment
+
+tidyeval
+  : underlying toolkit
+  
+quosure
+  : A special type of formula: A one-sided formula.
+  
+`!!`
+  : 
+  
+`quo()`
+  : Equivalent to `quote()`?
+  
+`enquo()`
+  : Equivalent to `substitute()`?
+  
+promise
+  : 
+
+`quo_name()`
+  :
+  
+Enclosure
+  : When an object keeps track of its environment. (Try `typeof(mean)`)
+  
+See `rlang::.data`.
+
+How to evaluate input, rather than quote it? Using a function that captures the expression and environment.
+
+`quote()` and `~` don't work very well, so `quo()` was created.
+
+`quo()` works like `"`: it quotes its input rather than evaluating it.
+
+Use `!!` to 
+
+`enquo()`
+
+The definition of `quo()`:
+
+    quo <- function(expr) {
+      enquo(expr)
+    }
+    
+```{r}
+
+iris
+
+column <- "Species"
+
+my_quosure <- quo(column)
+
+blah <- select(.data = iris, !!my_quosure)
+
+blah
+
+```
+
+Does it just boil down to using `enquo()` when using `dplyr` functions inside of my own functions?
+
+Want to `return()` custom strings? Use `quo_name()`. Also, use `:=`.
+
+Multiple arguments?
+
+`...` as a formal argument
+`quos()` to capture arguments
+`!!!` to splice
+
+```{r}
+
+x <- c(1:10)
+
+args <- list(na.rm = TRUE, trim = 0.25)
+
+quo(mean(x, !!!args))
+
+# or
+
+args <- list(quo(x), na.rm = TRUE, trim = 0.25)
+
+quo(mean(!!!args))
+
+
+```
+
+Quoting is capturing. In R, quoting is done via
+
+`~`
+`quote()`
+
+```{r}
+
+class(~junk)
+class(quote(junk))
+
+```
+
+`formula`s capture their code and its execution environment.
+
+get_expr()
+get_env()
+eval_tidy()
+
+## Quasiquotation
+
+Quasiquotation LISP
+
+Unquoting:
+
+* basic
+* unquote splicing
+* unquoting names
+
+Capture `letters` as an expression:
+
+```{r}
+
+quo(toupper(letters))
+
+```
+
+Capture what `letters` would typically return:
+
+```{r}
+
+quo(toupper(!!letters))
+
+```
+
+```{r}
+
+thing <- quo(letters)
+
+quo(toupper(!!thing))
+
+```
+
+The `^` signifies what?
+
+```{r}
+
+quo(list(!!!letters))
+
+```
+
+If you want to unquote on the left-hand side, i.e. set variable names, use `:=`.
+
+```{r}
+
+# From "Tidy evaluation in 5 mins"
+
+my_scatterplot <- function(df, xvar, yvar) {
+  
+  xvar <- enexpr(xvar)
+  yvar <- enexpr(yvar)
+  
+  ggplot(df, aes(!!xvar, !!yvar)) +
+    geom_point()
+  
+}
+
+source("path/to/my_scatterplot.R")
+
+```
+
+```{r}
+
+my_scatterplot <- function(df, xvar, yvar) {
+  
+  browser()
+  
+  # > xvar
+  # Error: object 'cyl' not found
+  # > yvar
+  # Error: object 'qsec' not found
+  
+  # Promise evaluation?
+  
+  xvar <- enexpr(xvar)
+  yvar <- enexpr(yvar)
+  
+  # > xvar
+  # cyl
+  # > yvar
+  # qsec
+  
+  browser()
+  
+  ggplot(df, aes(!!xvar, !!yvar)) +
+    geom_point()
+  
+}
+
+my_scatterplot(
+  df = mtcars, 
+  xvar = cyl, 
+  yvar = qsec
+)
+
+```

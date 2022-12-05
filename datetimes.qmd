@@ -1,0 +1,102 @@
+
+# Dates, times, and datetimes
+
+```{r}
+
+library(readxl)
+library(dplyr)
+library(lubridate)
+
+```
+
+## Problem
+
+Occasionally, dates will be read in as a number representing some time since the origin.
+
+The origin depends on how the data were recorded. Here are a few common origins:
+
+Source | Origin
+-------|-----------
+Excel  | 1899-12-30
+Unix   | 1970-01-01
+
+The origin 
+
+## Solution
+
+1. Determine the origin. E.g., in Excel, this is 1899-12-30.
+2. If just interested in a date, then your variable needs to be numeric, and represent the number of days since the origin; if interested in a datetime, then your variable needs to be numeric, and represent the number of seconds since the origin.
+
+### Example
+
+Suppose 
+
+* we have an Excel workbook named `metadata.xlsx` with a column named `timestamp`, and the dates look like we expect (e.g., `"2018-03-15 10:15"`)
+* we read in `timestamp.xlsx` in R using `readxl::read_excel()`
+* we're suprised to find that the values under `timestamp` don't look like dates (e.g., `"2018-03-15 10:15"` has become `"43173.666666666664"`)
+
+What happened?
+
+To simulate this scenario, here's a data set containing
+
+* `what_we_got` (the time since the origin)
+* `what_we_expected` (the timestamp we're used to [the target for this exercise])
+
+```{r}
+
+metadata <-
+  read_excel(
+    path = 
+      file.path(
+        "path/to/",
+        "metadata.xlsx"
+      ),
+    sheet = "Timestamp"
+  )
+
+```
+
+We want `what_we_got` (a number representing the time since the origin) to be `what_we_expected` (a timestamp that is formatted in a familiar way).
+
+We don't know what units `what_we_got` is in, but we can easily find that out by
+
+* determining the origin
+* doing some simple math
+
+E.g., the first value is `metadata$what_we_got[1]`. The origin for these values is 1899-12-30 (`%Y%m%d`).
+
+If we assume this value is the number of days since the origin, and we just want the date, all we need to do is ensure we convert `what_we_got` to `numeric`, and use `lubridate::as_date()` with `origin = "1899-12-30 UTC"`:
+
+```{r}
+
+metadata %>%
+mutate(
+  .data = .,
+  what_we_got = as.numeric(what_we_got),
+  what_we_got = as_date(what_we_got, origin = "1899-12-30 UTC")
+)
+
+```
+
+To recover `"2018-03-15 10:15"` (the datetime), we need to convert `what_we_got` to a more granular unit: seconds.
+
+To do so, convert
+
+* days to hours (24 hours per day);
+* hours to minutes (60 minutes per hour); and
+* minutes to seconds (60 seconds per minute)
+
+and use `lubridate::as_datetime()`:
+
+```{r}
+
+metadata %>%
+mutate(
+  .data = .,
+  what_we_got = as.numeric(what_we_got) * 24 * 60 * 60,
+  what_we_got = as_datetime(what_we_got, origin = "1899-12-30 UTC")
+)
+
+```
+
+That's it!

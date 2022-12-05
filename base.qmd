@@ -1,0 +1,46 @@
+
+# `{base}`
+
+`is.atomic()` if numeric, logical, character, complex, raw, or null <!-- written as null, not NULL; verify? -->
+`is.language()` 
+`is.recursive()` if list; returns FALSE if S4
+
+`show()` for console; `View()` for IDE. (Neither `return()` a value.)
+
+    random_sample <- 
+      sample(
+        x = letters,
+        size = 10
+      ) %>%
+      show(
+        object = .
+      )
+  
+## `do.call()`
+
+    do.call(
+      what = function_name, 
+      args = list(arg_1, arg_2, arg_3)
+    )
+
+is equivalent to
+
+    function_name(arg_1, arg_2, arg_3)
+
+Ah! Leah! by Donnie Iris
+
+## Quoting functions (`{base}`)
+
+Unlike `{rlang}` analogs, quoting functions from `{base}` do not support unquoting. (This was the motivation for quasiquotation.)
+
+* `quote()`
+* `substitute()`
+* `alist()`
+* `bquote()`
+* `~`
+
+## Accessors
+
+`::` is an accessor, and it used to access exported functions from a package.
+
+`:::` is used to access non-exported functions. Non-exported functions may not be documented.

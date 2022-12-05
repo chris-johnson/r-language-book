@@ -1,0 +1,34 @@
+project:
+  type: book
+
+book:
+  title: "The R language"
+  author: "Chris Johnson"
+  date: "12/4/2022"
+  chapters:
+    - index.qmd
+    - base.qmd
+    - datetimes.qmd
+    - debug.qmd
+    - methods.qmd
+    - operators.qmd
+    - r6.qmd
+    - regex.qmd
+    - rlang.qmd
+    - tidyeval.qmd
+    - under_the_hood.qmd
+    - references.qmd
+
+execute: 
+  eval: false
+
+bibliography: references.bib
+
+format:
+  html:
+    theme: cosmo
+  pdf:
+    documentclass: scrreprt
+
+
+

@@ -1,0 +1,252 @@
+
+# Under the hood
+
+## Libraries
+
+In R, a library is a directory whose subdirectories are named after and include the contents of R packages.
+
+The types of libraries are
+
+* Common (library is created during install; houses "standard" and "recommended" packages that are installed along with R [see `installed.packages(priority = "high")`])
+* User (librar is created during install; houses additional packages installed by the user)
+* Site (not created by default)
+
+<!-- How can a user set priorities for packages? -->
+
+Site
+  : 
+
+Sys.getenv() will display all environment variables. It seems to be a superset of what is returned by `set` in Command Prompt, including R-specific variables.
+
+`Sys.getenv("R_HOME")`
+`Sys.getenv("R_LIBS_USER")`
+`Sys.getenv("R_LIBS_SITE")` <!-- How to get common library location using Sys.getenv()? -->
+
+
+
+Additional libraries can be added using `.libPaths()`. The order of `.libPaths()` indicates 
+
+It is suggested to use a combination of common library and user libraries.
+
+User-specific libraries: Set r-libs-user in /etc/rstudio/rsession.conf
+
+User libraries are associated with major.minor, not major.minor.patch
+
+## References
+
+https://cran.r-project.org/doc/manuals/r-release/R-admin.html#Managing-libraries
+https://support.rstudio.com/hc/en-us/articles/215733837-Managing-libraries-for-RStudio-Server
+
+# Configuration
+
+* `Rprofile.site` (located in installation directory)
+* `.Rprofile` (located in home folder ["~/"])
+
+## Dotfiles
+
+Dotfiles are for customization.
+
+Must end with newline or last line will not be ran.
+
+`.Renviron` is for 
+
+* sensitive information (e.g. API keys)
+* R-specific environment variables
+
+but doesn't contain R code.
+
+`.Rprofile` 
+
+* is for and contains R code
+* lives in `R_PROFILE_USER` (`/` by default)
+
+<!--
+
+May need to do the following in `.Rprofile`:
+
+if (interactive()) {
+  # stuff
+}
+
+-->
+
+<!-- packages to explore
+
+`{usethis}`
+`{}`
+
+--> 
+
+<!-- .Rprofile
+
+This file can be used to print a custom startup message for R or customize R prompt.
+
+-->
+
+<!-- Rscript
+
+`--vanilla` ignores startup files.
+`--no-init-file` to disregard `.Rprofile`
+`--no-site-file` to disregard `Rprofile.site`
+`--no-environ` to ignore environment files
+
+-->
+
+<!--
+
+upgrade: `devtools::upgrade_packages()`
+downgrade: `devtools::install_version()`
+
+patches don't require upgrading packages
+minor and major updates require upgrading packages
+
+see rstats.wtf/maintaining-r.html
+
+-->
+
+<!-- 
+
+Binary distributions of R include 14 base packages and 15 recommended packages
+
+-->
+
+
+
+## Libraries
+
+### Installing packages
+
+All installation methods use R CMD install, which can do so from source, bundle, or binary packages.
+
+Ways to install packages:
+
+* `install.packages()`
+* `devtools::install()`
+* `devtools::build()`
+* `devtools::install_github()`
+
+### Libraries
+
+A library is a directory containing installed packages.
+
+`.libPaths()` shows active libraries. ("Active" meaning that R knows where to find them.)
+
+<!-- from another file -->
+
+<!---
+
+Topics to discuss:
+
+`.libPaths()`
+
+R_LIBS_USER environment variable
+
+https://www.r-bloggers.com/how-to-upgrade-r-on-windows-7/
+
+It would also be good to write a tutorial on managing mutliple versions of R, as it is inline with managing libraries.
+
+--->
+
+### Where packages are installed
+
+### How to install R packages
+
+
+
+### Via `install.packages()`
+
+#### Installing from a zip
+
+<!--- Discuss the various arguments to install.packages(), such as repo, etc. --->
+
+### Via `devtools::install.github()`
+
+## Problems with installing R packages
+
+### Unable to move temporary installation
+
+When attempting to install a package via `install.packages()`, you may get the warning `unable to move temporary installation 'C:\path\to\temporary\installation' to 'C:\path\to\permanent\installation'`. This problem is due to antivirus and everything moving too fast.
+
+An actual instance looks like this:
+
+```
+package 'rgdal' successfully unpacked and MD5 sums checked.
+
+Warning in install.packages :
+  unable to move temporary installation
+  'path\to\R\win-library\3.4\file26a846732c06\rgdal'
+  to
+  'path\to\R\win-library\3.4\rgdal'
+  
+The downloaded binary packages are in
+  path\to\AppData\Local\Temp\1\RtmpmklLST\downloaded_packages
+
+```
+
+#### Solution 1 (preferred)
+
+This solution worked for me:
+
+1. Submit `debug(utils:::unpackPkgZip)`
+2. Submit `install.packages("rgdal", dependencies = TRUE)`
+3. Step through until complete.
+
+#### Solution 2 (not attempted, but would attempt)
+
+R also prints the location of the 
+
+I didn't try this solution, but I would feel comforable doing so. Locate the binary package location (`C:/path/to/downloaded_packages`) as reported by R.
+
+```{r}
+
+zipfile <- 
+  list.files(
+    path = "C:/path/to/downloaded_packages", 
+    full.names = TRUE
+  )
+
+exdir <- libPaths()[1]
+
+for(i in 1:length(path_to_binary)) {
+  
+  unzip(
+    zipfile = zipfile[i], 
+    exdir = exdir
+  )
+  
+}
+
+```
+
+#### Solution 3 (not attempted, but would attempt)
+
+This solution also involves using the zip located in `C:/path/to/downloaded_packages`:
+
+```{r}
+
+pkgs <- "C:/path/to/downloaded_packages/package.zip"
+
+lib <- libPaths()[1]
+
+install.packages(
+  pkgs = pkgs,
+  repos = NULL,
+  type = "win.binary",
+  lib = lib
+)
+
+```
+
+#### Solution 4 (not preferred)
+
+I initially attempted this solution, but a `Sys.sleep` time of `2.5` didn't work for me:
+
+1. Submit `trace(utils:::unpackPkgZip, edit = TRUE)`
+2. Change `Sys.sleep(0.5)` to `Sys.sleep(2.5)`
+
+In addition, this is not a _comfortable_ solution, in my opinion. (`utils:::unpackPkgZip()` does get reset after quitting or terminating the R session.)
+
+#### Solution 5 (nope)
+
+The worst solution seems to be changing the read and write access to folders, and this is not recommended as they are probably set as such for a good reason!
+

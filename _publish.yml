@@ -1,0 +1,4 @@
+- source: project
+  quarto-pub:
+    - id: 4c44f9f2-a08b-49c9-9144-0d58519b46c5
+      url: 'https://quartopub.com/sites/chrisjohnson/r-language-book'

@@ -1,0 +1,130 @@
+
+# `{methods}`
+
+`S4`
+
+Class definition and object construction occur at runtime. (In other languages, class definition occurs at compile-time, and object construction occurs at runtime)
+
+inheritance | dispatch
+------------|----------
+multiple    | multiple
+
+slot
+
+classes
+generics
+methods
+
+prototypes
+constructors
+helpers
+validators
+
+accessor functions
+
+method dispatch
+multiple inheritance
+multiple dispatch
+
+S3 and S4 interaction
+
+setClass() to create class
+setGeneric() to create generic
+setMethod() to create method
+
+S4 functions are defined in `{methods}`
+
+methods::setClass(Class = "name", slots = c()) registers a class definition in a hidden global variable <!-- how to hide variables? see prefixed ".", e.g. .GlobalEnv: is this hidden? -->
+
+methods::new(Class, key = "value")
+
+methods::is(object) to introspect (inheritance)
+
+If `r` is a `RasterLayer` object, try
+
+    class(r)
+    methods::is(r)
+
+`@` generally should only be used in method definitions
+Use accessor functions if working with an S4 object defined by someone else
+Accessors are S4 generics
+
+Set
+
+    setGeneric(name = "property", def = function(x) standardGeneric(f = "property"))
+
+Get
+
+    setGeneric(name = "property<-", def = function(x, value) standardGeneric(f = "property<-"))
+
+Define methods
+
+    setMethod(f = "property", signature = "name", function(x) x@property)
+
+    setMethod(f = "property<-", signature = "name", function(x, value) x@property <- value)
+    
+`{sloop}` has useful functions for finding S4 objects:
+
+* `sloop::otype()`
+* `sloop::ftype()`
+
+Community agrees to use UpperCamelCase for class names
+
+    setClass(
+      Class = "car",
+      slots = 
+        c(
+          make = "character",
+          model = "character",
+          year = "numeric",
+          transmission = "character",
+          n_doors = "numeric",
+          mpg = "numeric"
+        ),
+      prototype =
+        list(
+          make = "NA_character_",
+          model = "NA_character_",
+          year = NA_integer_,
+          transmission = NA_character_,
+          n_doors = NA_integer_,
+          mpg = NA_real_
+        )
+    )
+
+    mustang <- 
+      methods::new(
+        make = "Ford,
+        model = "Mustang",
+        year = 2004,
+        transmission = "manual",
+        n_doors = 2,
+        mpg = 28.3
+      )
+
+Inheritance basically means a class can be built from subclasses:
+
+    setClass(
+      Class = "driver",
+      contains = "car",
+      slots = c(vehicle = "car"),
+      prototype = list(methods::new(Class = "car"))
+    )
+
+Some functions in `{methods}` are intended to be used only by the developer, and not the user:
+
+
+Define a validitor for the class which runs when the constructor runs:
+
+    setValidity(
+      Class = "name",
+      method = function()
+    )
+
+Check validity of instantiated objects with `validObject()`
+
+## Generics
+
+setGeneric(name = "name", def = function(standardGeneric))
+    
+<!-- Need to resume with 15.4: Generics and Methods at adv-r.hadley.nz/s4.html -->
